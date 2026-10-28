@@ -8,7 +8,8 @@ from typing import Optional
 import typer
 from typer.core import TyperGroup
 
-from .commands import editing, listing, management
+from . import __version__
+from .commands import data, diagnostics, editing, listing, management
 from .commands import preview_client as preview_client_module
 from .commands._registry import register_bindings
 from .utils.editor import NoteEditorMode
@@ -55,6 +56,10 @@ class DefaultToListGroup(TyperGroup):
             token = args[index]
             if token in self.commands:
                 break
+            if token == "--json":
+                new_args.append(token)
+                index += 1
+                continue
             if token in passthrough_options:
                 new_args.append(token)
                 if index + 1 < len(args) and not args[index + 1].startswith("-"):
@@ -93,6 +98,13 @@ app = typer.Typer(
 )
 
 
+def _show_version(value: bool) -> None:
+    """Print the installed version without loading configuration or Zotero."""
+    if value:
+        typer.echo(f"Refero {__version__}")
+        raise typer.Exit()
+
+
 @app.callback()
 def _global_options(
     note_editor: Optional[str] = typer.Option(
@@ -101,11 +113,23 @@ def _global_options(
         help="Editor mode for notes: text | markdown",
         case_sensitive=False,
     ),
+    non_interactive: bool = typer.Option(
+        False,
+        "--non-interactive",
+        envvar="REF_NON_INTERACTIVE",
+        help="Disable pickers, editors, and retry prompts (place before command).",
+    ),
+    version: bool = typer.Option(
+        False, "--version", callback=_show_version, is_eager=True,
+        help="Print the installed version and exit.",
+    ),
 ):
     """Configure global CLI options.
 
     Args:
         note_editor: Override the preferred editor mode for notes.
+        non_interactive: Disable interaction for this invocation.
+        version: Print the installed version and exit.
     """
 
     if note_editor:
@@ -115,7 +139,7 @@ def _global_options(
         os.environ["REF_NOTE_EDITOR"] = value
 
 
-for module in (listing, editing, management, preview_client_module):
+for module in (listing, editing, management, preview_client_module, diagnostics, data):
     register_bindings(app, getattr(module, "COMMANDS", ()))
 
 

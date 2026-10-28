@@ -20,6 +20,7 @@ from ..utils.collections import (
     resolve_collections_list,
 )
 from ..utils.items import is_html_attachment, is_pdf_attachment, resolve_attachment_path
+from ..utils.interaction import is_non_interactive, require_write_confirmation
 from ..utils.system import open_path as system_open_path
 from ..utils.zotero import (
     echo_network_error,
@@ -343,9 +344,11 @@ def set_cmd(
     collections_rm: List[str] = typer.Option([], "--collection-rm", help="Remove from collections (repeat or comma-separate; accepts key or name)"),
     tags_rm: List[str] = typer.Option([], "--tag-rm", help="Remove one or more tags (repeat or comma-separate)"),
     pdf_rm: bool = typer.Option(False, "--pdf-rm", help="Remove PDF attachment(s) from the item"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Acknowledge user approval for non-interactive writes"),
 ) -> None:
     """Set metadata on an existing item: tags, collections, and attachments."""
 
+    require_write_confirmation("set", yes)
     if not (tags or collections or attach_pdf or collections_rm or tags_rm or pdf_rm):
         raise typer.BadParameter(
             "Provide at least one of --tag/--collection/--pdf or removal flags --tag-rm/--collection-rm/--pdf-rm"
@@ -466,9 +469,12 @@ def add(
     collections: List[str] = typer.Option([], "--collection", "-c", help="One or more collection KEYS or NAMES (repeat or comma-separate)"),
     tags: List[str] = typer.Option([], "--tag", "-g", help="Add one or more tags (repeat or comma-separate)"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Print the Zotero JSON and exit"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Acknowledge user approval for non-interactive creation"),
 ) -> None:
     """Add an item to Zotero by resolving metadata from DOI or arXiv."""
 
+    if not dry_run:
+        require_write_confirmation("add", yes)
     if bool(doi) + bool(arxiv) != 1:
         raise typer.BadParameter("Provide exactly one of --doi or --arxiv")
 
@@ -659,6 +665,9 @@ def delete(
         permanent: When ``True`` attempt permanent deletion, otherwise trash.
         yes: Skip the interactive confirmation prompt when ``True``.
     """
+
+    if is_non_interactive() and not yes:
+        raise typer.BadParameter("delete requires --yes in non-interactive mode")
 
     zot = zot_from_config()
     logger.info("Deleting %s item(s); permanent=%s", len(keys), permanent)

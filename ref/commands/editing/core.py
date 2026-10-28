@@ -532,9 +532,9 @@ def picker_edit(key: str) -> None:
 
 
 CORE_COMMANDS = (
-    CommandBinding(callback=edit, name="edit"),
-    CommandBinding(callback=picker_edit, name="picker-edit"),
-    CommandBinding(callback=abstract, name="abstract"),
-    CommandBinding(callback=extra, name="extra"),
-    CommandBinding(callback=note, name="note"),
+    CommandBinding(callback=edit, name="edit", interactive=True),
+    CommandBinding(callback=picker_edit, name="picker-edit", interactive=True),
+    CommandBinding(callback=abstract, name="abstract", interactive=True),
+    CommandBinding(callback=extra, name="extra", interactive=True),
+    CommandBinding(callback=note, name="note", interactive=True),
 )

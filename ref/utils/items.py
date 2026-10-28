@@ -160,7 +160,15 @@ def resolve_attachment_path(
     if isinstance(path_value, str) and path_value:
         if path_value.startswith("storage:"):
             relative_path = path_value[len("storage:") :].lstrip("/\\")
-            return storage_dir / relative_path
+            relative = Path(relative_path)
+            if not relative.parts or ".." in relative.parts:
+                return None
+            legacy_path = storage_dir / relative
+            if attachment_key and relative.parts[0] != attachment_key:
+                candidate = storage_dir / attachment_key / relative
+                if candidate.exists() or not legacy_path.exists():
+                    return candidate
+            return legacy_path
         absolute_path = Path(path_value).expanduser()
         if absolute_path.is_absolute():
             return absolute_path

@@ -1,1 +1,7 @@
 exclude AGENTS.md
+prune outputs
+recursive-include skills *.md
+include scripts/install_skill.py
+include scripts/eval_skill.py
+include evals/refero/README.md
+include evals/refero/cases.json

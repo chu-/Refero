@@ -10,6 +10,7 @@ import typer
 
 from ..backends.zotero_client import ZoteroClient
 from ..config import _config_path, load as load_config
+from .interaction import is_non_interactive
 T = TypeVar("T")
 
 __all__ = [
@@ -113,7 +114,7 @@ def run_with_network_retry(op: Callable[[], T], *, prompt: str = "Network/SSL er
         try:
             return op()
         except Exception as exc:
-            if is_network_error(exc):
+            if is_network_error(exc) and not is_non_interactive():
                 if typer.confirm(prompt, default=True):
                     continue
             raise
@@ -282,7 +283,10 @@ def zot_from_config() -> ZoteroClient:
             raise typer.Exit(code=1)
 
         try:
-            client.create_items([])
+            if is_non_interactive():
+                client.list_items(limit=1)
+            else:
+                client.create_items([])
         except requests.HTTPError as exc:
             status = exc.response.status_code if exc.response else None
             if status == 404:

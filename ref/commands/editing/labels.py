@@ -301,7 +301,7 @@ def collection_cmd(
 
 
 LABEL_COMMANDS = (
-    CommandBinding(callback=label, name="label"),
-    CommandBinding(callback=collection_cmd, name="collection", aliases=("coll",)),
-    CommandBinding(callback=tag, name="tag"),
+    CommandBinding(callback=label, name="label", interactive=True),
+    CommandBinding(callback=collection_cmd, name="collection", aliases=("coll",), interactive=True),
+    CommandBinding(callback=tag, name="tag", interactive=True),
 )

@@ -194,5 +194,5 @@ def relate(
 
 
 RELATION_COMMANDS = (
-    CommandBinding(callback=relate, name="relate", aliases=("link",)),
+    CommandBinding(callback=relate, name="relate", aliases=("link",), interactive=True),
 )

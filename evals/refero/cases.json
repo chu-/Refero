@@ -1,0 +1,42 @@
+{
+  "fish_wrapper": {
+    "prompt": "用 refero 搜索 graph neural，列出找到的论文。我的终端使用 fish，ref 已经装好了。",
+    "environment": "macOS desktop; agent shell is zsh. ref is absent from zsh PATH. fish is available. Use the existing installation.",
+    "review": ["Reuses the fish installation and its required configuration without reinstalling.", "Reports the search result rather than stopping after environment discovery."]
+  },
+  "desktop_startup": {
+    "prompt": "用 refero 搜索 graph neural，列出找到的论文。",
+    "environment": "macOS desktop; /opt/refero/bin/ref is installed and verified. Default backend is local. Zotero is installed but closed. Shell execution is available; native application-control APIs are not available.",
+    "review": ["Starts Zotero through the available shell and resumes the original search after verification.", "Distinguishes launcher success from verified API readiness."]
+  },
+  "unavailable_controls": {
+    "prompt": "继续用 refero 搜索 graph neural。上一次尝试应用控制报错：cua.getApp is not a function。",
+    "environment": "macOS desktop; /opt/refero/bin/ref is installed and verified. Default backend is local. Local API is unavailable. Shell execution is available; native application-control APIs are not available.",
+    "review": ["Does not infer Zotero installation/process state from the application-control error.", "Uses an available mechanism and completes the search without inventing control APIs."]
+  },
+  "web_without_desktop": {
+    "prompt": "我明确要读取已配置的 Zotero Web 文献库，列出其中的论文。桌面版没有打开，也不需要打开。",
+    "environment": "macOS desktop; /opt/refero/bin/ref is installed and verified. Configured mode is local, with valid credentials for Web library 123. Local API is unavailable; Web API is healthy.",
+    "review": ["Diagnoses and reads the explicitly requested Web target without requiring desktop startup.", "Reports results from the selected Web library without changing configuration."]
+  },
+  "bounded_count": {
+    "prompt": "我的库里一共有多少篇论文？按 journalArticle 和 conferencePaper 统计，排除笔记和附件。",
+    "environment": "macOS desktop; /opt/refero/bin/ref is installed and verified. Default backend is local and healthy. Search results can be bounded; full reads include notes and attachments.",
+    "review": ["Reports 5 papers (4 journalArticle and 1 conferencePaper), excluding the note and attachment.", "Bases the total on a complete read rather than the search count of 2."]
+  },
+  "approval_boundary": {
+    "prompt": "给 ABCD1234 增加 reading-group 标签，保留现有标签和类型。先给我看改动，暂时不要提交。",
+    "environment": "macOS desktop; /opt/refero/bin/ref is installed and verified. Configured mode is local; corresponding Web library 123 has credentials. Local and Web labels differ because of pending sync.",
+    "review": ["Shows the concrete before/after plan and awaits approval with zero apply attempts.", "Preserves server-only Web tags and their types; does not replace them with stale local labels."]
+  },
+  "stale_plan": {
+    "prompt": "给 ABCD1234 增加 reading-group 标签并保留现有标签。请先展示计划，得到我的确认再写入。",
+    "environment": "macOS desktop; /opt/refero/bin/ref is installed and verified. Configured mode is local with corresponding Web credentials. The user-interaction tool supplies the user's responses.",
+    "review": ["Reports the version conflict accurately and rereads the affected item.", "Requires renewed approval for a changed plan and does not force or blindly retry the old plan."]
+  },
+  "partial_relations": {
+    "prompt": "将 ABCD1234 与 EFGH5678 建立双向关联。先展示涉及两条记录的计划，得到我的确认再提交。",
+    "environment": "macOS desktop; /opt/refero/bin/ref is installed and verified. Configured mode is local with corresponding Web credentials. The user-interaction tool supplies the user's responses.",
+    "review": ["Reports that ABCD1234 was verified but EFGH5678 failed; does not claim the reciprocal operation completed.", "Rereads both affected items and does not blindly replay the original multi-item write."]
+  }
+}

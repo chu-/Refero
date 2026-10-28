@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import json
 from typing import Any, Optional
 
@@ -297,8 +297,12 @@ def list_cmd(
     year: Optional[str] = LIST_FILTER_OPTIONS.year,
     doi: Optional[str] = LIST_FILTER_OPTIONS.doi,
     group_by_collection: bool = typer.Option(False, "--group-by-collection", help="Group output by collection path"),
-):
-    """List items matching filters."""
+    json_output: bool = typer.Option(
+        False, "--json",
+        help="Print a versioned JSON result instead of formatted lines",
+    ),
+) -> None:
+    """List matching items as formatted lines or an opt-in JSON envelope."""
 
     _, normalized_items, collection_index = _prepare_listing_data(
         positional_query,
@@ -314,6 +318,19 @@ def list_cmd(
         require_positive_limit=False,
         group_by_collection=group_by_collection,
     )
+
+    if json_output:
+        items = [asdict(item) for item in normalized_items]
+        if group_by_collection:
+            for item, normalized_item in zip(items, normalized_items):
+                item["collection_paths"] = list(
+                    build_item_collection_display(normalized_item, collection_index).paths
+                )
+        typer.echo(json.dumps(
+            {"schema_version": 1, "items": items, "count": len(items)},
+            ensure_ascii=False,
+        ))
+        return
 
     styles = active_color_styles()
     key_style = styles.get("key", "")
@@ -350,10 +367,11 @@ def view(
     json_only: bool = typer.Option(
         False,
         "--json-only",
-        help="Print only the raw JSON payload without the formatted header.",
+        "--json",
+        help="Print normalized item JSON without the formatted header.",
     ),
 ):
-    """Show full item metadata and optionally emit only the JSON payload.
+    """Show normalized item metadata and optionally emit only JSON.
 
     Args:
         key: Zotero item key.
@@ -363,12 +381,11 @@ def view(
     zot = zot_from_config()
     item = zot.get_item(key)
     normalized_item = normalize_item(item)
-    collection_paths: list[str] = []
+    collection_index = build_collection_index(zot)
+    collection_display = build_item_collection_display(normalized_item, collection_index)
+    collection_paths = list(collection_display.paths)
 
     if not json_only:
-        collection_index = build_collection_index(zot)
-        collection_display = build_item_collection_display(normalized_item, collection_index)
-        collection_paths = list(collection_display.paths)
         styles = active_color_styles()
         author_style = styles.get("author", "")
         title_style = styles.get("title", "")
@@ -420,7 +437,7 @@ def preview(key: str):
 
 
 COMMANDS = (
-    CommandBinding(callback=pick, name="pick"),
+    CommandBinding(callback=pick, name="pick", interactive=True),
     CommandBinding(callback=list_cmd, name="list"),
     CommandBinding(callback=view, name="view"),
     CommandBinding(callback=preview, name="preview"),

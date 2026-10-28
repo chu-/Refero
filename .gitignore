@@ -203,6 +203,10 @@ cython_debug/
 .cursorrules
 AGENTS.md
 
+# Local exports and agent evaluation artifacts may contain private library data.
+/outputs/
+.DS_Store
+
 # Marimo
 marimo/_static/
 marimo/_lsp/

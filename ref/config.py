@@ -357,11 +357,11 @@ def _ensure_secure_permissions(path: Path) -> None:
             )
 
 
-def _load_raw_config() -> Dict[str, Any]:
+def _load_raw_config(*, read_only: bool = False) -> Dict[str, Any]:
     cfg = deepcopy(DEFAULTS)
 
     path = _config_path()
-    if not path.exists():
+    if not path.exists() and not read_only:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8") as handle:
             yaml.safe_dump(cfg, handle, sort_keys=False, allow_unicode=True)
@@ -375,11 +375,16 @@ def _load_raw_config() -> Dict[str, Any]:
             )
     if path.exists():
         # Ensure permissions are secure before reading.
-        _ensure_secure_permissions(path)
+        if not read_only:
+            _ensure_secure_permissions(path)
         with path.open("r", encoding="utf-8") as handle:
             loaded = yaml.safe_load(handle) or {}
+            if read_only and not isinstance(loaded, dict):
+                raise ValueError("Config must contain a YAML mapping")
             if isinstance(loaded, dict):
                 for key, value in loaded.items():
+                    if read_only and key == "zotero" and not isinstance(value, dict):
+                        raise ValueError("zotero must contain a YAML mapping")
                     if key == "zotero" and isinstance(value, dict):
                         cfg["zotero"].update(value)  # type: ignore[index]
                     else:
@@ -393,6 +398,7 @@ def _config_path() -> Path:
     return Path(os.environ.get("REF_CONFIG", "~/.config/ref/config.yaml")).expanduser()
 
 
-def load() -> RefConfig:
-    raw_cfg = _load_raw_config()
+def load(*, read_only: bool = False) -> RefConfig:
+    """Load configuration, optionally without creating files or changing modes."""
+    raw_cfg = _load_raw_config(read_only=read_only)
     return RefConfig.from_mapping(raw_cfg)
